@@ -1,4 +1,8 @@
-tableDesignerServer <- function(id, nature, table_name) {
+tableDesignerServer <- function(id,
+                                nature,
+                                table,
+                                named_finess,
+                                formating = NULL) {
 
   ## TODO create config std and save to .rds file in ovalide
   ## TODO ovalide should know how to adapt original table from config
@@ -6,21 +10,23 @@ tableDesignerServer <- function(id, nature, table_name) {
   ## TODO module should take table config when constructed
   ## TODO module should return table config when saved
 
-  ovalide::load_score(nature)
-  score_table           <- ovalide::score(nature)
-  choices               <- score_table$Finess
-  names(choices)        <- score_table$Libellé
+  choices               <- named_finess
   random_initial_choice <- sample(choices, size = 1)
 
-  ovalide::load_ovalide_tables(nature)
-  full_table <- ovalide::ovalide_tables(nature)[[table_name]]
+  full_table <- table
 
   moduleServer(id, function(input, output, session) {
     ns <- NS(id)
 
-    original_table_names <- names(full_table) %>% setdiff("finess_comp")
-    selected_columns     <- reactiveVal(original_table_names)
-    translated_columns   <- reactiveVal(original_table_names)
+    if (is.null(formating)) {
+      original_table_names <- names(full_table) %>% setdiff("finess_comp")
+      formating$selected_columns   <- reactiveVal(original_table_names)
+      formating$translated_columns <- reactiveVal(original_table_names)
+      formating$filters            <- reactiveVal(list())
+      formating$long_columns       <- reactiveVal(list())
+      formating$long_originals     <- reactiveVal(list())
+      formating$long_translated    <- reactiveVal(list())
+    }
 
     output$translation <- shiny::renderUI(
       purrr::map2(
@@ -75,8 +81,6 @@ tableDesignerServer <- function(id, nature, table_name) {
         pageLength = -1
       )
     )
-
-    filters <- reactiveVal(list())
 
     create_event_observers <- function() {
       undo_list <- reactiveVal(list())

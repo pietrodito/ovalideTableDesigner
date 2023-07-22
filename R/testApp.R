@@ -24,6 +24,7 @@ testApp <- function() {
       %>% map(paste, collapse = " ")
       %>% map2(names(.), ., ~ paste(.x, .y))
       %>% exec(paste, .)
+      %>% write_rds("test.rds")
     )
   })
  }
