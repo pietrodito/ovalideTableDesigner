@@ -18,6 +18,7 @@ testApp <- function() {
 
   output$log <- renderText({
     req(result)
+    write_rds(result, "test.rds")
     (
       list(`Colonnes retenues` = result$selected_columns(),
            `Traduction`        = result$translated_columns())
