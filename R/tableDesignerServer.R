@@ -110,26 +110,33 @@ tableDesignerServer <- function(id, nature, table_name) {
       translated_columns(purrr::map_chr(selected_columns(), ~ input[[.x]]))
     })
 
+    a_cell_is_selected <- function() ncol(input$table_cells_selected) > 0
+
+
     ## Remove ligne event
     observeEvent(input$rm_row, {
-      save_state_to_undo_list()
-      col_nb <- input$table_cells_selected[1, 2] + 1
-      row_nb <- input$table_cells_selected[1, 1]
-      pick_value_column <- translated_columns()[col_nb]
-      filter_column <- selected_columns()[col_nb]
-      value <- table()[row_nb, pick_value_column] %>% dplyr::pull()
-      filters(c(filters(), list(list(column = filter_column,
-                                     value  = value))))
+      if(a_cell_is_selected()) {
+        save_state_to_undo_list()
+        col_nb <- input$table_cells_selected[1, 2] + 1
+        row_nb <- input$table_cells_selected[1, 1]
+        pick_value_column <- translated_columns()[col_nb]
+        filter_column <- selected_columns()[col_nb]
+        value <- table()[row_nb, pick_value_column] %>% dplyr::pull()
+        filters(c(filters(), list(list(column = filter_column,
+                                       value  = value))))
+      }
     })
 
     ### Remove colonne event
     observeEvent(input$rm_col, {
-      save_state_to_undo_list()
-      col_nb <- input$table_cells_selected[1, 2] + 1
-      column <- selected_columns()[col_nb]
-      selected_columns(selected_columns()[-col_nb])
-      translated_columns(translated_columns()[-col_nb])
-      filters(remove_filters_about(column))
+      if(a_cell_is_selected()) {
+        save_state_to_undo_list()
+        col_nb <- input$table_cells_selected[1, 2] + 1
+        column <- selected_columns()[col_nb]
+        selected_columns(selected_columns()[-col_nb])
+        translated_columns(translated_columns()[-col_nb])
+        filters(remove_filters_about(column))
+      }
     })
 
 
