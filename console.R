@@ -1,4 +1,14 @@
 library(ovalide)
 library(tidyverse)
 
-reactiveConsole(T)
+
+reactiveConsole()
+
+r <- reactiveValues()
+
+l <- list(a = 1, b = 2)
+
+iwalk(l, \(x, idx) r[[idx]] <<- x)
+
+
+

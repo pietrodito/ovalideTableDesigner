@@ -1,5 +1,4 @@
 tableDesignerServer <- function(id,
-                                nature,
                                 table,
                                 named_finess,
                                 formating = NULL) {
@@ -7,8 +6,6 @@ tableDesignerServer <- function(id,
   ## TODO create config std and save to .rds file in ovalide
   ## TODO ovalide should know how to adapt original table from config
   ## TODO refactor here to use ovalide to format table with config
-  ## TODO module should take table config when constructed
-  ## TODO module should return table config when saved
 
   choices               <- named_finess
   random_initial_choice <- sample(choices, size = 1)
@@ -18,23 +15,51 @@ tableDesignerServer <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- NS(id)
 
-    if (is.null(formating)) {
-      original_table_names <- names(full_table) %>% setdiff("finess_comp")
-      formating$selected_columns   <- reactiveVal(original_table_names)
-      formating$translated_columns <- reactiveVal(original_table_names)
-      formating$filters            <- reactiveVal(list())
-      formating$long_columns       <- reactiveVal(list())
-      formating$long_originals     <- reactiveVal(list())
-      formating$long_translated    <- reactiveVal(list())
+    original_table_names<- names(full_table) %>% setdiff("finess_comp")
+
+    default <- list(
+      selected_columns   = original_table_names,
+      translated_columns = original_table_names,
+      filters            = list(),
+      row_names          = list(),
+      rows_translated    = list(),
+      proper_left_col    = FALSE
+    )
+
+    if (! is.null(formating)) {
+      default$selected_columns   <- formating$selected_columns
+      default$translated_columns <- formating$translated_columns
+      default$filters            <- formating$filters
+      default$row_names          <- formating$row_names
+      default$rows_translated    <- formating$rows_translated
+      default$proper_left_col    <- formating$proper_left_col
     }
 
-    output$translation <- shiny::renderUI(
-      purrr::map2(
-        selected_columns(),
-        translated_columns(),
-        ~ shiny::textInput(ns(.x), .x, .y)
-      )
-    )
+    r <- do.call(shiny::reactiveValues, default)
+
+    output$translation_columns <- shiny::renderUI({
+        purrr::map2(
+          r$selected_columns,
+          r$translated_columns,
+          ~ shiny::textInput(ns(.x), .x, .y)
+        )
+    })
+
+    observeEvent(input$proper_left_col_start, {
+      r$proper_left_col <- TRUE
+    })
+    observeEvent(input$proper_left_col_stop, {
+      r$proper_left_col <- FALSE
+    })
+
+    output$translation_rows <- shiny::renderUI({
+      req(r$proper_left_col)
+        purrr::map2(
+          r$row_names,
+          r$rows_translated,
+          ~ shiny::textInput(ns(.x), .x, .y)
+        )
+    })
 
     shiny::updateSelectInput(session,
       "finess",
@@ -43,12 +68,11 @@ tableDesignerServer <- function(id,
       selected = random_initial_choice
     )
 
-
     table <- reactive({
       (
         full_table
-        %>% dplyr::filter(finess_comp == choices)
-          %>% dplyr::select(selected_columns())
+        %>% dplyr::filter(finess_comp == input$finess)
+        %>% dplyr::select(r$selected_columns)
       ) -> result
 
       apply_filter <- function(df, filter) {
@@ -59,9 +83,9 @@ tableDesignerServer <- function(id,
         }
       }
 
-      for (f in filters()) result <- apply_filter(result, f)
+      for (f in r$filters) result <- apply_filter(result, f)
 
-      names(result) <- translated_columns()
+      names(result) <- r$translated_columns
 
       (
         result
@@ -69,7 +93,13 @@ tableDesignerServer <- function(id,
             contains("%"),
             ~ scales::percent(as.numeric(.) / 100)
           ))
-      )
+      ) -> result
+
+      if(r$proper_left_col && length(r$rows_translated) == nrow(result)) {
+        result[[r$selected_columns[1]]] <- r$rows_translated
+      }
+
+      result
     })
 
     output$table <- DT::renderDT(
@@ -89,16 +119,14 @@ tableDesignerServer <- function(id,
         ncol(input$table_cells_selected) > 0
       }
       load_state_from <- function(undo) {
-        selected_columns(undo$selected_columns)
-        translated_columns(undo$translated_columns)
-        filters(undo$filters)
+        r$selected_columns   <- undo$selected_columns
+        r$translated_columns <- undo$translated_columns
+        r$filters            <- undo$filters
+        r$row_names          <- undo$row_names
+        r$rows_translated    <- undo$rows_translated
       }
       create_state <- function() {
-        list(
-          selected_columns   = selected_columns(),
-          translated_columns = translated_columns(),
-          filters            = filters()
-        )
+        shiny::reactiveValuesToList(r)
       }
       save_state_to_undo_list <- function() {
         undo_list(c(
@@ -116,48 +144,56 @@ tableDesignerServer <- function(id,
           undo_list(suppress_last_element(undo_list()))
         }
       })
+      observeEvent(r$proper_left_col, {
+        save_state_to_undo_list()
+        req(input$finess)
+        (
+          full_table
+          %>% dplyr::filter(finess_comp == input$finess)
+          %>% dplyr::pull(r$selected_columns[1])
+        ) -> x
+        r$row_names <- x
+        if (length(r$rows_translated) == 0) {
+          r$rows_translated <- x
+        }
+      })
       observeEvent(input$proper_cols, {
         save_state_to_undo_list()
-        translated_columns(purrr::map_chr(selected_columns(), ~ input[[.x]]))
+        r$translated_columns <-
+          purrr::map_chr(r$selected_columns, ~ input[[.x]])
+        r$rows_translated <-
+          purrr::map_chr(r$row_names, ~ input[[.x]])
       })
       observeEvent(input$rm_row, {
         if (a_cell_is_selected()) {
           save_state_to_undo_list()
           col_nb <- input$table_cells_selected[1, 2] + 1
           row_nb <- input$table_cells_selected[1, 1]
-          pick_value_column <- translated_columns()[col_nb]
-          filter_column <- selected_columns()[col_nb]
+          pick_value_column <- r$translated_columns[col_nb]
+          filter_column <- r$selected_columns[col_nb]
           value <- table()[row_nb, pick_value_column] %>% dplyr::pull()
-          filters(c(filters(), list(list(
+          r$filters <- c(r$filters, list(list(
             column = filter_column,
             value = value
-          ))))
+          )))
         }
       })
       observeEvent(input$rm_col, {
         remove_filters_about <- function(column) {
-          discard(filters(), ~ .x$column == column)
+          discard(r$filters, ~ .x$column == column)
         }
         if (a_cell_is_selected()) {
           save_state_to_undo_list()
           col_nb <- input$table_cells_selected[1, 2] + 1
-          column <- selected_columns()[col_nb]
-          selected_columns(selected_columns()[-col_nb])
-          translated_columns(translated_columns()[-col_nb])
-          filters(remove_filters_about(column))
+          column <- r$selected_columns[col_nb]
+          r$selected_columns <- r$selected_columns[-col_nb]
+          r$translated_columns <- r$translated_columns[-col_nb]
+          r$filters <- remove_filters_about(column)
         }
       })
     }
 
-    return_result <- function() {
-      list(
-        selected_columns   = reactive(selected_columns()),
-        translated_columns = reactive(translated_columns()),
-        filters            = reactive(filters())
-      ) %>% purrr::map(~ bindEvent(.x, input$save))
-    }
-
     create_event_observers()
-    return_result()
+    reactive(r) %>% bindEvent(input$save)
   })
 }
