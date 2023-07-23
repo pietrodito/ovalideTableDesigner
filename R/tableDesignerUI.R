@@ -10,12 +10,15 @@ tableDesignerUI <- function(id) {
   ns <- NS(id)
   shiny::fluidPage(
     shiny::fluidRow(
-      column(8,
+      column(4,
              shiny::selectInput(ns("finess"),
                                 label = "FINESS", choices = NULL)),
       column(4,
              shiny::actionButton(ns("save"  ),
                                  label = "Sauvegarder")),
+      column(4,
+             shiny::actionButton(ns("debug"  ),
+                                 label = "Log")),
     ),
     shiny::fluidRow(
       shiny::actionButton(ns("proper_left_col_start"),
