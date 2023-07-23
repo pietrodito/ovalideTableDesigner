@@ -1,8 +1,11 @@
 library(ovalide)
 library(tidyverse)
 
-<<<<<<< HEAD
-o <- read_rds("./test.rds")
-=======
-read_rds("test.rds")
->>>>>>> server-has-no-ovalide-access
+(x <- list(a = 1, b = 2))
+(y <- list(a = 3, b = 4, c = 5))
+
+c <- y$c
+(y <- x)
+y$c <- c
+
+y

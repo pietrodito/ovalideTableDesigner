@@ -12,7 +12,6 @@ tableDesignerServer <- function(id,
   moduleServer(id, function(input, output, session) {
     ns <- NS(id)
 
-
     original_table_names<- names(table) %>% setdiff("finess_comp")
 
     default <- list(
@@ -25,33 +24,17 @@ tableDesignerServer <- function(id,
       undo_list          = list()
     )
 
-    if (! is.null(formating)) {
-      default$selected_columns   <- formating$selected_columns
-      default$translated_columns <- formating$translated_columns
-      default$filters            <- formating$filters
-      default$row_names          <- formating$row_names
-      default$rows_translated    <- formating$rows_translated
-      default$proper_left_col    <- formating$proper_left_col
-      default$undo_list          <- formating$undo_list
-    }
+    if (! is.null(formating)) default <- formating
 
     r <- do.call(shiny::reactiveValues, default)
 
     output$translation_columns <- shiny::renderUI({
-        purrr::map2(
-          r$selected_columns,
-          r$translated_columns,
-          ~ shiny::textInput(ns(.x), .x, .y)
-        )
+        text_input_list_from(r$selected_columns, r$translated_columns, ns)
     })
 
     output$translation_rows <- shiny::renderUI({
       req(r$proper_left_col)
-        purrr::map2(
-          r$row_names,
-          r$rows_translated,
-          ~ shiny::textInput(ns(.x), .x, .y)
-        )
+      text_input_list_from(r$row_names, r$rows_translated, ns)
     })
 
     shiny::updateSelectInput(session,
@@ -198,4 +181,9 @@ tableDesignerServer <- function(id,
     create_event_observers()
     reactive(r) %>% bindEvent(input$save)
   })
+}
+
+text_input_list_from <- function(original, translated, ns) {
+  purrr::map2(original, translated,
+              ~ shiny::textInput(ns(.x), .x, .y))
 }
