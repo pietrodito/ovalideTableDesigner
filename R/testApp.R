@@ -2,32 +2,31 @@ library(ovalide)
 library(shiny)
 library(tidyverse)
 
+load_ovalide_tables(nature())
+table <- ovalide_tables(nature())[["T1D2RTP_1"]]
+load_score(nature())
+score <- score(nature())
+(finess <- score$Finess)
+names(finess) <- score$Libellé
+
 testApp <- function() {
+  ui <- fluidPage(
+    tableDesignerUI("designer")
+  )
 
- ui <- fluidPage(
-   textOutput("log"),
-   tableDesignerUI("designer")
- )
+  server <- function(input, output, session) {
+    formating <- NULL
+    if (fs::file_exists("test.rds")) {
+      formating <- read_rds("test.rds")
+    }
 
- server <- function(input, output, session) {
-   result <- tableDesignerServer("designer",
-                                 nature("mco", "dgf"),
-                                 # "T1Q0QSYNTH_1")
-                                 # "T1Q5DPZ_1")
-                                 "T1D2RTP_1")
+    result <- tableDesignerServer("designer", table, finess, formating)
 
-  output$log <- renderText({
-    req(result)
-    write_rds(result, "test.rds")
-    (
-      list(`Colonnes retenues` = result$selected_columns(),
-           `Traduction`        = result$translated_columns())
-      %>% map(paste, collapse = " ")
-      %>% map2(names(.), ., ~ paste(.x, .y))
-      %>% exec(paste, .)
-    )
-  })
- }
+    observe({
+      req(result)
+      write_rds(reactiveValuesToList(result()), "test.rds")
+    })
+  }
 
- shinyApp(ui, server)
+  shinyApp(ui, server)
 }
