@@ -16,6 +16,10 @@ tableDesignerServer <- function(id,
   ## TODO mettre les filtres sur ligne apparents dans l'UI
   ## pour pouvoir les supprimer
 
+  ## TODO Renommer supprimer lignes en Créer un filtre
+
+  ## TODO Implémenter un vrai supprimer lignes
+
   random_initial_choice <- sample(named_finess, size = 1)
 
   moduleServer(id, function(input, output, session) {
@@ -118,13 +122,7 @@ save_state_to_undo_list <- function(r) {
 }
 
 load_state_from <- function(undo, r) {
-  ## Impossible to refactor without breaking the reactive graph
-  r$selected_columns   <- undo$selected_columns
-  r$translated_columns <- undo$translated_columns
-  r$filters            <- undo$filters
-  r$row_names          <- undo$row_names
-  r$rows_translated    <- undo$rows_translated
-  r$proper_left_col    <- undo$proper_left_col
+  purrr::imap(undo, \(x, idx) r[[idx]] <- x)
 }
 
 a_cell_is_selected <- function(input) {

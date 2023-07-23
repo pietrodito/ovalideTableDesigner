@@ -11,7 +11,7 @@ names(finess) <- score$Libellé
 
 testApp <- function() {
   ui <- fluidPage(
-    tableDesignerUI("designer")
+    tableDesignerUI("designer", debug = T)
   )
 
   server <- function(input, output, session) {
