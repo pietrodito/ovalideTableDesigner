@@ -67,7 +67,6 @@ tableDesignerServer <- function(id,
       )
     )
 
-
     create_event_observers <- function() {
 
       a_cell_is_selected <- function() {
@@ -75,6 +74,8 @@ tableDesignerServer <- function(id,
       }
 
       load_state_from <- function(undo) {
+        ## Impossible to refactor without
+        ## breaking the reactive graph
         r$selected_columns   <- undo$selected_columns
         r$translated_columns <- undo$translated_columns
         r$filters            <- undo$filters
@@ -86,6 +87,7 @@ tableDesignerServer <- function(id,
       create_state <- current_state_to_parameter_list
 
       save_state_to_undo_list <- function() {
+        browser()
         last_undo <- NULL
         this_undo <- create_state()
         l <- length(r$undo_list)
@@ -175,6 +177,13 @@ tableDesignerServer <- function(id,
               %>% dplyr::filter(finess_comp == input$finess)
               %>% dplyr::select(- finess_comp))
         print(current_state_to_parameter_list())
+      })
+      observeEvent(input$undo_list, {
+        line <- function() cat(paste0(rep("-", 80), collapse = ""), "\n")
+        line()
+        print(Sys.time())
+        line()
+        print(r$undo_list)
       })
     }
 

@@ -16,9 +16,12 @@ tableDesignerUI <- function(id) {
       column(4,
              shiny::actionButton(ns("save"  ),
                                  label = "Sauvegarder")),
-      column(4,
+      column(2,
              shiny::actionButton(ns("debug"  ),
                                  label = "Log")),
+      column(2,
+             shiny::actionButton(ns("undo_list"  ),
+                                 label = "Undo list")),
     ),
     shiny::fluidRow(
       shiny::actionButton(ns("proper_left_col_start"),
