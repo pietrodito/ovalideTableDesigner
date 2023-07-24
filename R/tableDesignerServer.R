@@ -16,10 +16,6 @@ tableDesignerServer <- function(id,
   ## TODO mettre les filtres sur ligne apparents dans l'UI
   ## pour pouvoir les supprimer
 
-  ## TODO Renommer supprimer lignes en Créer un filtre
-
-  ## TODO Implémenter un vrai supprimer lignes
-
   random_initial_choice <- sample(named_finess, size = 1)
 
   moduleServer(id, function(input, output, session) {
@@ -39,16 +35,19 @@ tableDesignerServer <- function(id,
     render_finess_input(session, named_finess, random_initial_choice)
     render_table(dt_table, output)
     render_translation_inputs(output, r, ns)
+    render_rm_filter_list(output, input, r, ns)
 
     event_left_col_start      (input, r)
-    event_proper_left_col_stop(input, r)
+    event_translate_first_col_stop(input, r)
     event_undo                (input, r)
     event_proper_left_col(input, r)
-    event_proper_cols(input, r)
-    event_rm_row(input, r, dt_table)
+    event_translate(input, r)
+    event_add_filter(input, r, dt_table)
     event_rm_col(input, r)
-    event_debug(input, r, table)
+    event_rm_filter(input, r)
+    event_log_current_state(input, r, table)
     event_undo_list(input, r)
+
 
     reactive(r) %>% bindEvent(input$save)
   })
@@ -56,7 +55,7 @@ tableDesignerServer <- function(id,
 
 read_or_create_formating <- function(table, formating) {
   create_default_formating <- function() {
-    original_table_names<- names(table) %>% setdiff("finess_comp")
+    original_table_names <- names(table) %>% setdiff("finess_comp")
     list(
       selected_columns   = original_table_names,
       translated_columns = original_table_names,
@@ -68,7 +67,7 @@ read_or_create_formating <- function(table, formating) {
     )
   }
   if (is.null(formating)) {
-    create_default_formating(table)
+    create_default_formating()
   } else {
     formating
   }
@@ -101,6 +100,22 @@ render_translation_inputs <- function(output, r, ns) {
     text_input_list_from(r$row_names, r$rows_translated, ns)})
 }
 
+render_rm_filter_list <- function(output, input, r, ns) {
+  output$rm_filter_button_list <- shiny::renderUI({
+    req(r$filters)
+    choices <- purrr::map(r$filters, ~ .x$select_choice)
+    names(choices) <- purrr::map_chr(r$filters, ~ .x$select_name)
+    list(
+      shiny::selectInput(ns("rm_filter_choice"), "Filtres", choices),
+      shiny::actionButton(ns("rm_filter"), "Supprimer filtre")
+    )
+  })
+
+
+}
+
+
+
 current_state_to_parameter_list <- function(r) {
   parameters <- shiny::reactiveValuesToList(r)
   parameters$undo_list <- NULL
@@ -130,7 +145,7 @@ a_cell_is_selected <- function(input) {
 }
 
 event_left_col_start <- function(input, r) {
-  observeEvent(input$proper_left_col_start, {
+  observeEvent(input$translate_first_col_start, {
     if(! r$proper_left_col) {
       save_state_to_undo_list(r)
       r$proper_left_col <- TRUE
@@ -138,8 +153,8 @@ event_left_col_start <- function(input, r) {
   })
 }
 
-event_proper_left_col_stop <- function(input, r) {
-  observeEvent(input$proper_left_col_stop, {
+event_translate_first_col_stop <- function(input, r) {
+  observeEvent(input$translate_first_col_stop, {
     if(r$proper_left_col) {
       save_state_to_undo_list(r)
       r$proper_left_col <- FALSE
@@ -174,8 +189,8 @@ event_proper_left_col <- function(input, r) {
   })
 }
 
-event_proper_cols <- function(input, r) {
-  observeEvent(input$proper_cols, {
+event_translate <- function(input, r) {
+  observeEvent(input$translate, {
     save_state_to_undo_list(r)
 
     r$translated_columns <- purrr::map_chr(r$selected_columns, ~ input[[.x]])
@@ -185,8 +200,8 @@ event_proper_cols <- function(input, r) {
   })
 }
 
-event_rm_row <- function(input, r, dt_table) {
-  observeEvent(input$rm_row, {
+event_add_filter <- function(input, r, dt_table) {
+  observeEvent(input$add_filter, {
     if (a_cell_is_selected(input)) {
       save_state_to_undo_list(r)
       col_nb <- input$table_cells_selected[1, 2] + 1
@@ -195,6 +210,8 @@ event_rm_row <- function(input, r, dt_table) {
       filter_column <- r$selected_columns[col_nb]
       value <- dt_table()[row_nb, pick_value_column] %>% dplyr::pull()
       r$filters <- c(r$filters, list(list(
+        select_name = paste(filter_column, "<>", value),
+        select_choice = paste0(filter_column, "_", value),
         column = filter_column,
         value = value
       )))
@@ -214,8 +231,8 @@ event_rm_col <- function(input, r) {
   })
 }
 
-event_debug <- function(input, r, table) {
-  observeEvent(input$debug, {
+event_log_current_state <- function(input, r, table) {
+  observeEvent(input$log_current_state, {
     line <- function() cat(paste0(rep("-", 80), collapse = ""), "\n")
     line()
     print(Sys.time())
@@ -235,5 +252,14 @@ event_undo_list <- function(input, r) {
     print(Sys.time())
     line()
     print(r$undo_list)
+  })
+}
+
+
+event_rm_filter <- function(input, r) {
+  observeEvent(input$rm_filter, {
+    req(r$filters)
+    save_state_to_undo_list(r)
+    r$filters <- purrr::discard(r$filters, \(f) f$select_choice == input$rm_filter_choice)
   })
 }
