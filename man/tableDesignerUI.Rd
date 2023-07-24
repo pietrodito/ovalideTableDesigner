@@ -4,7 +4,7 @@
 \alias{tableDesignerUI}
 \title{Title}
 \usage{
-tableDesignerUI(id)
+tableDesignerUI(id, debug = FALSE)
 }
 \arguments{
 \item{id}{}

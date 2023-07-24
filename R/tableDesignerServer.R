@@ -114,8 +114,6 @@ render_rm_filter_list <- function(output, input, r, ns) {
 
 }
 
-
-
 current_state_to_parameter_list <- function(r) {
   parameters <- shiny::reactiveValuesToList(r)
   parameters$undo_list <- NULL
@@ -254,7 +252,6 @@ event_undo_list <- function(input, r) {
     print(r$undo_list)
   })
 }
-
 
 event_rm_filter <- function(input, r) {
   observeEvent(input$rm_filter, {

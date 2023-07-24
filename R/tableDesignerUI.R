@@ -10,10 +10,10 @@ tableDesignerUI <- function(id, debug = FALSE) {
 
   ns <- NS(id)
   shiny::fluidPage(
-    css_center(),
+    define_css(),
     shiny::fluidRow(
-      shiny::column(6, finess_input(ns), class = "center"),
-      shiny::column(6, save_button(ns), class = "center"),
+      shiny::column(6, finess_input(ns), class = "large"),
+      shiny::column(6, save_button(ns), class = "large"),
     ),
     shiny::fluidRow(
       shiny::column(4, translate_button(ns), class = "center"),
@@ -42,16 +42,28 @@ tableDesignerUI <- function(id, debug = FALSE) {
   )
 }
 
-css_center <- function() {
-  tags$style("
-    .center {
+define_css <- function() {
+  main <- "
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 85px;
       background: AliceBlue;
       border: 1px solid Coral;
-    }")
+  "
+
+  tags$style(str_c("
+    .center {
+    ",
+    main,
+    "
+    height: 50px;",
+    "}
+    .large {
+    ",
+    main,
+    "
+    height: 85px;",
+    "}"))
 }
 
 table_output <- function(ns) {
