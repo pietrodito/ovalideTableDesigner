@@ -75,7 +75,6 @@ read_or_create_formating <- function(table, formating) {
   }
 }
 
-
 render_description_output <- function(session, r) {
   shiny::updateTextAreaInput(session, "description",
                              value = isolate(r$description))

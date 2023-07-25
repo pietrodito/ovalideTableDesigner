@@ -6,7 +6,6 @@ if(! interactive()) {
   })
   }
 }
-
 setup_ovalide_data <- function() {
   library(ovalide)
   library(ovalideTableDesigner)
@@ -46,7 +45,6 @@ testApp <- function() {
 }
 
 if(! interactive()) main()
-
 
 ## interactive tests ######
 if (interactive()) {
