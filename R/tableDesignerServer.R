@@ -25,27 +25,30 @@ tableDesignerServer <- function(id,
     r <- do.call(shiny::reactiveValues, formating)
 
 
-    dt_table <- reactive(
+    dt_table <- reactive( {
+      req(input$finess)
       do.call(ovalide::format_table,
-              read_formating_parameters(table, finess, r, input)))
+              read_formating_parameters(table, finess, r, input))
+    })
 
 
     render_finess_input(session, named_finess, random_initial_choice)
     render_table(dt_table, output)
     render_translation_inputs(output, r, ns)
     render_rm_filter_list(output, input, r, ns)
+    render_description_output(session, r)
 
     event_left_col_start      (input, r)
     event_translate_first_col_stop(input, r)
     event_undo                (input, r)
-    event_proper_left_col(input, r)
+    event_proper_left_col(input, r, table)
     event_translate(input, r)
     event_add_filter(input, r, dt_table)
     event_rm_col(input, r)
     event_rm_filter(input, r)
     event_log_current_state(input, r, table)
     event_undo_list(input, r)
-
+    event_description_update(input, r)
 
     reactive(r) %>% bindEvent(input$save)
   })
@@ -61,7 +64,8 @@ read_or_create_formating <- function(table, formating) {
       row_names          = list(),
       rows_translated    = list(),
       proper_left_col    = FALSE,
-      undo_list          = list()
+      undo_list          = list(),
+      description        = list()
     )
   }
   if (is.null(formating)) {
@@ -71,17 +75,24 @@ read_or_create_formating <- function(table, formating) {
   }
 }
 
+
+render_description_output <- function(session, r) {
+  shiny::updateTextAreaInput(session, "description",
+                             value = isolate(r$description))
+}
+
 render_finess_input <- function(session, choices, random_initial_choice) {
   shiny::updateSelectInput(session, "finess",
-                           label = "FINESS",
                            choices = choices,
                            selected = random_initial_choice)
 }
 
 read_formating_parameters <- function(table, finess, r, input) {
-  c(list(table = table,
-         finess = input$finess),
-    current_state_to_parameter_list(r))
+  params <- c(list(table = table,
+                   finess = input$finess),
+              current_state_to_parameter_list(r))
+  params$description <- NULL
+  params
 }
 
 render_table <- function(dt_table, output) {
@@ -176,7 +187,7 @@ event_undo <- function(input, r) {
   })
 }
 
-event_proper_left_col <- function(input, r) {
+event_proper_left_col <- function(input, r, table) {
   observeEvent(r$proper_left_col, {
     req(input$finess)
     (
@@ -262,5 +273,13 @@ event_rm_filter <- function(input, r) {
     req(r$filters)
     save_state_to_undo_list(r)
     r$filters <- purrr::discard(r$filters, \(f) f$select_choice == input$rm_filter_choice)
+  })
+}
+
+event_description_update <- function(input, r) {
+  observeEvent(input$description, {
+    # if(input$description != "") {
+      r$description <- input$description
+    # }
   })
 }

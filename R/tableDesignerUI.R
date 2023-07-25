@@ -11,10 +11,21 @@ tableDesignerUI <- function(id, debug = FALSE) {
   ns <- NS(id)
   shiny::fluidPage(
     define_css(),
+    tags$style("button { width: 250px;}"),
+
     shiny::fluidRow(
-      shiny::column(6, finess_input(ns), class = "large"),
-      shiny::column(6, save_button(ns), class = "large"),
+      tags$form(
+        tags$div(class = "form-group row large",
+                 tags$label(htmlFor=ns("input"),
+                            class = "col-sm-1 col-form-label",
+                            "FINESS"),
+                 tags$div(class = "col-sm-4", finess_input(ns)),
+                 tags$div(class = "col-sm-2"),
+                 tags$div(class = "col-sm-3", save_button(ns))
+        )
+      )
     ),
+
     shiny::fluidRow(
       shiny::column(4, translate_button(ns), class = "center"),
       shiny::column(4, translate_first_col_start_button(ns), class = "center"),
@@ -32,7 +43,7 @@ tableDesignerUI <- function(id, debug = FALSE) {
       )
     },
     shiny::fluidRow(
-        shiny::column(12, description_input(ns), class = "center"),
+        shiny::column(12, description_input(ns), class = "verylarge"),
     ),
     shiny::fluidRow(
       table_output(ns)
@@ -51,7 +62,6 @@ define_css <- function() {
       justify-content: center;
       align-items: center;
       background: AliceBlue;
-      border: 1px solid Coral;
   "
 
   tags$style(str_c("
@@ -60,6 +70,12 @@ define_css <- function() {
     main,
     "
     height: 50px;",
+    "}
+    .verylarge {
+    ",
+    main,
+    "
+    height: 100px;",
     "}
     .large {
     ",
@@ -70,11 +86,30 @@ define_css <- function() {
 }
 
 table_output <- function(ns) {
-    DT::DTOutput(ns("table"))
+  DT::DTOutput(ns("table"))
+}
+
+
+bs_select <- function(id,
+                      choices,
+                      selected = NULL,
+                      label = NULL,
+                      class = NULL) {
+  argg <- as.list(match.call())
+
+  argg$choices <- NULL
+  (
+    choices
+    %>% purrr::imap(\(x, idx) tags$option(value = x,idx))
+  ) -> choices
+
+  selected <- tags$option(selected="", selected)
+
+  tags$select(id=id, choices, selected)
 }
 
 finess_input <- function(ns) {
-  shiny::selectInput(ns("finess"), label = "FINESS", choices = NULL)
+  bs_select(ns("finess"), choices = NULL)
 }
 
 save_button <- function(ns) {
@@ -116,9 +151,10 @@ undo_button <- function(ns) {
 }
 
 description_input <- function(ns) {
-  shiny::textAreaInput(ns("description"),
-                       label = "Description",
-                       placeholder = "Veuillez saisir une description")
+    shiny::textAreaInput(ns("description"),
+                         label = "Description",
+                         width = "100%",
+                         height = "100%")
 }
 
 translation_column_inputs <- function(ns) {

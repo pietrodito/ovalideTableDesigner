@@ -1,14 +1,25 @@
-library(ovalide)
-library(ovalideTableDesigner)
-library(shiny)
-library(tidyverse)
+main <- function() {
+  test_that("server works", {
+    setup_ovalide_data()
+    app <- shinytest::ShinyDriver$new(testApp())
+  })
+}
 
-load_ovalide_tables(nature())
-table <- ovalide_tables(nature())[["T1D2RTP_1"]]
-load_score(nature())
-score <- score(nature())
-(finess <- score$Finess)
-names(finess) <- score$Libellé
+setup_ovalide_data <- function() {
+  library(ovalide)
+  library(ovalideTableDesigner)
+  library(shiny)
+  library(tidyverse)
+
+  load_ovalide_tables(nature())
+  table_to_test <<- ovalide_tables(nature())[["T1D2RTP_1"]]
+  load_score(nature())
+  scores <<- score(nature())
+  (finess <<- scores$Finess)
+  names(finess) <<- scores$Libellé
+}
+
+setup_ovalide_data <- purrr::quietly(setup_ovalide_data)
 
 testApp <- function() {
   ui <- fluidPage(
@@ -21,7 +32,7 @@ testApp <- function() {
       formating <- read_rds("test.rds")
     }
 
-    result <- tableDesignerServer("designer", table, finess, formating)
+    result <- tableDesignerServer("designer", table_to_test, finess, formating)
 
     observe({
       req(result)
@@ -32,10 +43,20 @@ testApp <- function() {
   shinyApp(ui, server)
 }
 
-sink("log.txt")
+main()
 
-print("-------------------------------------------------------")
-print(paste0("Starting app @ ", Sys.time()))
-print("-------------------------------------------------------")
 
-testApp()
+
+## interactive tests ######
+if (interactive()) {
+  setup_ovalide_data()
+
+
+  # sink("log.txt")
+
+  print("-------------------------------------------------------")
+  print(paste0("Starting app @ ", Sys.time()))
+  print("-------------------------------------------------------")
+
+  testApp()
+}
