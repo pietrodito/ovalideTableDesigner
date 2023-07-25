@@ -32,6 +32,9 @@ tableDesignerUI <- function(id, debug = FALSE) {
       )
     },
     shiny::fluidRow(
+        shiny::column(12, description_input(ns), class = "center"),
+    ),
+    shiny::fluidRow(
       table_output(ns)
     ),
     shiny::fluidRow(
@@ -112,6 +115,12 @@ undo_button <- function(ns) {
     shiny::actionButton(ns("undo"),        label = "Annuler")
 }
 
+description_input <- function(ns) {
+  shiny::textAreaInput(ns("description"),
+                       label = "Description",
+                       placeholder = "Veuillez saisir une description")
+}
+
 translation_column_inputs <- function(ns) {
   shiny::uiOutput(ns("translation_columns"))
 }
@@ -119,6 +128,7 @@ translation_column_inputs <- function(ns) {
 translation_row_inputs <- function(ns) {
   shiny::uiOutput(ns("translation_rows"))
 }
+
 rm_filter_button_list <- function(ns) {
   shiny::uiOutput(ns("rm_filter_button_list"))
 }

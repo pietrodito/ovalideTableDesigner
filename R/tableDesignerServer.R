@@ -13,8 +13,7 @@ tableDesignerServer <- function(id,
                                 named_finess,
                                 formating = NULL) {
 
-  ## TODO mettre les filtres sur ligne apparents dans l'UI
-  ## pour pouvoir les supprimer
+  ## TODO ajouter une description au tableau
 
   random_initial_choice <- sample(named_finess, size = 1)
 
@@ -25,12 +24,11 @@ tableDesignerServer <- function(id,
     formating <- read_or_create_formating(table, formating)
     r <- do.call(shiny::reactiveValues, formating)
 
-    dt_table <- reactive({
-      parameters <- c(list(table = table,
-                           finess = input$finess),
-                      current_state_to_parameter_list(r))
-      do.call(ovalide::format_table, parameters)
-    })
+
+    dt_table <- reactive(
+      do.call(ovalide::format_table,
+              read_formating_parameters(table, finess, r, input)))
+
 
     render_finess_input(session, named_finess, random_initial_choice)
     render_table(dt_table, output)
@@ -78,6 +76,12 @@ render_finess_input <- function(session, choices, random_initial_choice) {
                            label = "FINESS",
                            choices = choices,
                            selected = random_initial_choice)
+}
+
+read_formating_parameters <- function(table, finess, r, input) {
+  c(list(table = table,
+         finess = input$finess),
+    current_state_to_parameter_list(r))
 }
 
 render_table <- function(dt_table, output) {
