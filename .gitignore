@@ -1,6 +1,9 @@
 .Rproj.user
+.Rbuildignore
 .Rhistory
 .RData
 .Ruserdata
 /ovalide_data/
+/**/ovalide_data/
+*.rds
 log.txt

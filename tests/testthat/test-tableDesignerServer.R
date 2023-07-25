@@ -1,8 +1,10 @@
-main <- function() {
+if(! interactive()) {
+  main <- function() {
   test_that("server works", {
     setup_ovalide_data()
     app <- shinytest::ShinyDriver$new(testApp())
   })
+  }
 }
 
 setup_ovalide_data <- function() {
@@ -43,8 +45,7 @@ testApp <- function() {
   shinyApp(ui, server)
 }
 
-main()
-
+if(! interactive()) main()
 
 
 ## interactive tests ######
