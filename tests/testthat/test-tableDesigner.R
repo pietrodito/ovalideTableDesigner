@@ -24,7 +24,7 @@ setup_ovalide_data <- purrr::quietly(setup_ovalide_data)
 
 testApp <- function() {
   ui <- fluidPage(
-    tableDesignerUI("designer", debug = T)
+    tableDesignerUI("designer", debug = F)
   )
 
   server <- function(input, output, session) {

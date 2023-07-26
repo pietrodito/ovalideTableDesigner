@@ -13,13 +13,22 @@ tableDesignerUI <- function(id, debug = FALSE) {
   shiny::fluidPage(
     define_css(),
 
-    row_finess_and_save(ns),
-    row_translate(ns),
-    row_filter_undo(ns),
+    shiny::wellPanel(
+      row_finess_and_save(ns),
+      row_translate(ns),
+      row_filter_undo(ns)
+    ),
+
     if (debug) row_debug(ns),
-    row_description(ns),
-    row_table_output(ns),
-    row_details(ns)
+
+    shiny::wellPanel(
+      row_description(ns),
+      row_table_output(ns)
+    ),
+
+    shiny::wellPanel(
+      row_details(ns)
+    ),
   )
 }
 
@@ -38,24 +47,24 @@ row_finess_and_save <- function(ns) {
 
 row_translate <- function(ns) {
   shiny::fluidRow(
-    shiny::column(4, translate_button(ns), class = "center"),
-    shiny::column(4, translate_first_col_start_button(ns), class = "center"),
-    shiny::column(4, translate_first_col_stop_button(ns), class = "center")
+    shiny::column(4, translate_button(ns), class = "normal"),
+    shiny::column(4, translate_first_col_start_button(ns), class = "normal"),
+    shiny::column(4, translate_first_col_stop_button(ns), class = "normal")
   )
 }
 
 row_filter_undo <- function(ns) {
   shiny::fluidRow(
-    shiny::column(4, rm_col_button(ns), class = "center"),
-    shiny::column(4, add_filter_button(ns), class = "center"),
-    shiny::column(4, undo_button(ns), class = "center"),
+    shiny::column(4, rm_col_button(ns), class = "normal"),
+    shiny::column(4, add_filter_button(ns), class = "normal"),
+    shiny::column(4, undo_button(ns), class = "normal"),
   )
 }
 
 row_debug <- function(ns) {
   shiny::fluidRow(
-    shiny::column(6, log_current_state_button(ns), class = "center"),
-    shiny::column(6, log_undo_list_button(ns), class = "center"),
+    shiny::column(6, log_current_state_button(ns), class = "normal"),
+    shiny::column(6, log_undo_list_button(ns), class = "normal"),
   )
 }
 
@@ -76,38 +85,41 @@ row_details <- function(ns) {
   )
 }
 
-define_css <- function() {
-  main <- "
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: AliceBlue;
+background_color <- function() {
+  ".container-fluid {
+    background-color: #007BA7;
+  }"
+}
+
+all_buttons_same_width <- function() {
+  "button { width: 250px;}"
+}
+
+centered_buttons <- function() {
   "
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  "
+}
 
-  tags$style(str_c("
+define_row_height_style <- function(name, height_in_px) {
+  glue::glue("
+  .<<name>> {
+  <<centered_buttons()>>
+  height: <<height_in_px>>px;
+  }
+  ", .open = "<<", .close = ">>")
+}
 
-    button { width: 250px;}
-
-    .center {
-    ",
-    main,
-    "
-    height: 50px;",
-    "}
-
-    .verylarge {
-    ",
-    main,
-    "
-    height: 100px;",
-    "}
-
-    .large {
-    ",
-    main,
-    "
-    height: 85px;",
-    "}"))
+define_css <- function() {
+  tags$style(paste(
+    background_color(),
+    all_buttons_same_width(),
+    define_row_height_style("normal", 50),
+    define_row_height_style("large", 85),
+    define_row_height_style("verylarge", 100)
+  ))
 }
 
 table_output <- function(ns) {
@@ -153,7 +165,7 @@ add_filter_button <- function(ns) {
 }
 
 undo_button <- function(ns) {
-    shiny::actionButton(ns("undo"),        label = "Annuler")
+    shiny::actionButton(ns("undo"), label = "Annuler")
 }
 
 description_input <- function(ns) {

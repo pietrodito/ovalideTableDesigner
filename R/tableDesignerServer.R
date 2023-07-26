@@ -38,9 +38,9 @@ tableDesignerServer <- function(id,
     render_rm_filter_list(output, input, r, ns)
     render_description_output(session, r)
 
-    event_left_col_start      (input, r)
+    event_left_col_start(input, r)
     event_translate_first_col_stop(input, r)
-    event_undo                (input, r)
+    event_undo(input, r)
     event_proper_left_col(input, r, table)
     event_translate(input, r)
     event_add_filter(input, r, dt_table)
