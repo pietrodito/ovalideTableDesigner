@@ -9,11 +9,14 @@
 #'
 #' @examples
 tableDesignerServer <- function(id,
-                                table,
-                                named_finess,
-                                formating = NULL) {
+                                table_name,
+                                nature) {
 
-  ## TODO ajouter une description au tableau
+
+  ovalide::load_ovalide_tables(nature)
+  table <- ovalide::ovalide_table(nature, table_name)
+
+  named_finess <- read_named_finess(nature)
 
   random_initial_choice <- sample(named_finess, size = 1)
 
@@ -21,7 +24,7 @@ tableDesignerServer <- function(id,
 
     ns <- NS(id)
 
-    formating <- read_or_create_formating(table, formating)
+    formating <- read_or_create_formating(table, table_name, nature)
     r <- do.call(shiny::reactiveValues, formating)
 
 
@@ -49,12 +52,23 @@ tableDesignerServer <- function(id,
     event_log_current_state(input, r, table)
     event_undo_list(input, r)
     event_description_update(input, r)
-
-    reactive(r) %>% bindEvent(input$save)
+    event_save(input, r, table_name, nature)
   })
 }
 
-read_or_create_formating <- function(table, formating) {
+read_named_finess <- function(nature) {
+  load_score(nature())
+  scores <- score(nature())
+  (named_finess <- scores$Finess)
+  names(named_finess) <- scores$Libellé
+  named_finess
+}
+
+formating_filepath <- function(nature, table_name) {
+  glue::glue("{ovalide::data_save_dir(nature)}/{table_name}_formating.rds")
+}
+
+read_or_create_formating <- function(table, table_name, nature) {
   create_default_formating <- function() {
     original_table_names <- names(table) %>% setdiff("finess_comp")
     list(
@@ -68,6 +82,13 @@ read_or_create_formating <- function(table, formating) {
       description        = list()
     )
   }
+
+  formating <- NULL
+  formating_filepath <- formating_filepath(nature, table_name)
+  if (fs::file_exists(formating_filepath)) {
+    formating <- read_rds(formating_filepath)
+  }
+
   if (is.null(formating)) {
     create_default_formating()
   } else {
@@ -154,6 +175,14 @@ load_state_from <- function(undo, r) {
 
 a_cell_is_selected <- function(input) {
   ncol(input$table_cells_selected) > 0
+}
+
+event_save <- function(input, r, table_name, nature) {
+  observeEvent(input$save, {
+    formating_filepath <- formating_filepath(nature, table_name)
+    print(paste("saving to", formating_filepath))
+    write_rds(reactiveValuesToList(r), formating_filepath)
+  })
 }
 
 event_left_col_start <- function(input, r) {
