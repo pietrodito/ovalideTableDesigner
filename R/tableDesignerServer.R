@@ -34,7 +34,7 @@ tableDesignerServer <- function(id,
               read_formating_parameters(table, finess, r, input))
     })
 
-
+    render_table_name(table_name, output)
     render_finess_input(session, named_finess, random_initial_choice)
     render_table(dt_table, output)
     render_translation_inputs(output, r, ns)
@@ -99,6 +99,13 @@ read_or_create_formating <- function(table, table_name, nature) {
 render_description_output <- function(session, r) {
   shiny::updateTextAreaInput(session, "description",
                              value = isolate(r$description))
+}
+
+
+render_table_name <- function(table_name, output) {
+  output$table_name <- shiny::renderUI(
+    shiny::wellPanel(shiny::h3(table_name))
+  )
 }
 
 render_finess_input <- function(session, choices, random_initial_choice) {

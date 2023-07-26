@@ -13,6 +13,8 @@ tableDesignerUI <- function(id, debug = FALSE) {
   shiny::fluidPage(
     define_css(),
 
+    shiny::uiOutput(ns("table_name")),
+
     shiny::wellPanel(
       row_finess_and_save(ns),
       row_translate(ns),

@@ -13,6 +13,7 @@ setup_ovalide_data <- function() {
   library(tidyverse)
 
   table_name <<- "T1D2RTP_1"
+  table_name <<- "T1D2DADNP_2"
 }
 
 setup_ovalide_data <- purrr::quietly(setup_ovalide_data)
