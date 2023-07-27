@@ -13,6 +13,7 @@ Imports:
     DT,
     magrittr,
     ovalide,
+    readr,
     shiny
 RoxygenNote: 7.2.3
 Suggests: 

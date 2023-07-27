@@ -12,7 +12,6 @@ tableDesignerServer <- function(id,
                                 table_name,
                                 nature) {
 
-
   ovalide::load_ovalide_tables(nature)
   table <- ovalide::ovalide_table(nature, table_name)
 
@@ -57,8 +56,8 @@ tableDesignerServer <- function(id,
 }
 
 read_named_finess <- function(nature) {
-  load_score(nature())
-  scores <- score(nature())
+  ovalide::load_score(nature)
+  scores <- ovalide::score(nature)
   (named_finess <- scores$Finess)
   names(named_finess) <- scores$Libellé
   named_finess
@@ -86,7 +85,7 @@ read_or_create_formating <- function(table, table_name, nature) {
   formating <- NULL
   formating_filepath <- formating_filepath(nature, table_name)
   if (fs::file_exists(formating_filepath)) {
-    formating <- read_rds(formating_filepath)
+    formating <- readr::read_rds(formating_filepath)
   }
 
   if (is.null(formating)) {
@@ -188,7 +187,7 @@ event_save <- function(input, r, table_name, nature) {
   observeEvent(input$save, {
     formating_filepath <- formating_filepath(nature, table_name)
     print(paste("saving to", formating_filepath))
-    write_rds(reactiveValuesToList(r), formating_filepath)
+    readr::write_rds(shiny::reactiveValuesToList(r), formating_filepath)
   })
 }
 

@@ -4,7 +4,7 @@
 \alias{tableDesignerServer}
 \title{Title}
 \usage{
-tableDesignerServer(id, table, named_finess, formating = NULL)
+tableDesignerServer(id, table_name, nature)
 }
 \arguments{
 \item{session}{}

@@ -116,7 +116,7 @@ define_row_height_style <- function(name, height_in_px) {
 
 define_css <- function() {
   tags$style(paste(
-    background_color(),
+    # background_color(),
     all_buttons_same_width(),
     define_row_height_style("normal", 50),
     define_row_height_style("large", 85),
