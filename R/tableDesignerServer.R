@@ -1,13 +1,4 @@
-#' Title
-#'
-#' @param input
-#' @param output
-#' @param session
-#'
-#' @return
 #' @export
-#'
-#' @examples
 tableDesignerServer <- function(id,
                                 table_name,
                                 nature) {
@@ -20,7 +11,7 @@ tableDesignerServer <- function(id,
   random_initial_choice <- sample(named_finess, size = 1)
 
   moduleServer(id, function(input, output, session) {
-
+    
     ns <- NS(id)
 
     formating <- read_or_create_formating(table, table_name, nature)
@@ -100,7 +91,6 @@ render_description_output <- function(session, r) {
                              value = isolate(r$description))
 }
 
-
 render_table_name <- function(table_name, output) {
   output$table_name <- shiny::renderUI(
     shiny::wellPanel(shiny::h3(table_name))
@@ -145,6 +135,7 @@ render_rm_filter_list <- function(output, input, r, ns) {
   output$rm_filter_button_list <- shiny::renderUI({
     req(r$filters)
     choices <- purrr::map(r$filters, ~ .x$select_choice)
+    # browser()
     names(choices) <- purrr::map_chr(r$filters, ~ .x$select_name)
     list(
       shiny::selectInput(ns("rm_filter_choice"), "Filtres", choices),
@@ -240,6 +231,7 @@ event_translate <- function(input, r) {
   observeEvent(input$translate, {
     save_state_to_undo_list(r)
 
+    # browser()
     r$translated_columns <- purrr::map_chr(r$selected_columns, ~ input[[.x]])
 
     req(r$proper_left_col)

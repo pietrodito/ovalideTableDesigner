@@ -1,11 +1,4 @@
-#' Title
-#'
-#' @param id
-#'
-#' @return
 #' @export
-#'
-#' @examples
 tableDesignerUI <- function(id, debug = FALSE) {
 
   ns <- NS(id)
